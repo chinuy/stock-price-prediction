@@ -1,6 +1,5 @@
 import datetime
 import cPickle
-import pandas as pd
 from sklearn import preprocessing
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import neighbors
@@ -14,11 +13,6 @@ def buildModel(dataset, method, parameters):
     """
 
     le = preprocessing.LabelEncoder()
-
-    # scaling colums
-    scaler = preprocessing.MinMaxScaler()
-    dataset = pd.DataFrame(scaler.fit_transform(dataset),\
-            columns=dataset.columns, index=dataset.index)
 
     # add prediction target: next day Up/Down
     dataset['UpDown'] = (dataset['Close'] - dataset['Open'])
@@ -40,11 +34,6 @@ def prepareDataForClassification(dataset, start_test):
     label the categories and split into train and test
     """
     le = preprocessing.LabelEncoder()
-
-    # scaling colums
-    scaler = preprocessing.MinMaxScaler()
-    dataset = pd.DataFrame(scaler.fit_transform(dataset),\
-            columns=dataset.columns, index=dataset.index)
 
     # add prediction target: next day Up/Down
     dataset['UpDown'] = (dataset['Close'] - dataset['Open'])

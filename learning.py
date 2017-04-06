@@ -1,4 +1,5 @@
 # Ref: http://francescopochetti.com/stock-market-prediction-part-ii-feature-generation/
+from sklearn import preprocessing
 import pandas_datareader.data as web
 import pandas as pd
 import datetime
@@ -151,7 +152,13 @@ def applyRollMeanDelayedReturns(dataset, delta):
     for n in delta:
         addFeatures(dataset, close, returns, n)
 
-    return dataset.drop(dataset.index[0:max(delta)]) #drop NaN due to delta spanning
+    dataset = dataset.drop(dataset.index[0:max(delta)]) #drop NaN due to delta spanning
+
+    # scaling colums
+    scaler = preprocessing.MinMaxScaler()
+    return pd.DataFrame(scaler.fit_transform(dataset),\
+            columns=dataset.columns, index=dataset.index)
+
 
 def get_data(name, start, end):
     data = web.get_data_yahoo(name, start, end)
