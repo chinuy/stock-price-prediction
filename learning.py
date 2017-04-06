@@ -50,9 +50,7 @@ def performCV(X_train, y_train, folds, method, parameters, savemodel):
 
     return acc.mean()
 
-###############################################################################
-
-def performTimeSeriesSearchGrid(X_train, y_train, folds, method, grid, fout, savemodel):
+def performTimeSeriesSearchGrid(X_train, y_train, folds, method, grid, savemodel):
     """
     parameters is a dictionary with: keys --> parameter , values --> list of values of parameter
     """
@@ -86,14 +84,15 @@ def performTimeSeriesSearchGrid(X_train, y_train, folds, method, grid, fout, sav
         print 'Final CV Results: ', final
         return final[0]
 
-def performFeatureSelection(stock_name, maxdeltas, cut, start_test, savemodel, method, folds, parameters):
+def performFeatureSelection(stock_name, maxdeltas, start, end, start_test, savemodel, method, folds, parameters):
     """
     """
+    finalGrid = {}
     print ''
     print '============================================================='
     print ''
     for maxdelta in range(3, maxdeltas + 2):
-        dataset = get_data(stock_name, cut)
+        dataset = get_data(stock_name, start, end)
         delta = range(2, maxdelta)
         print 'Delta days accounted: ', max(delta)
         dataset = applyRollMeanDelayedReturns(dataset, delta)
@@ -101,13 +100,22 @@ def performFeatureSelection(stock_name, maxdeltas, cut, start_test, savemodel, m
         X_train, y_train, X_test, y_test  = \
             classifier.prepareDataForClassification(dataset, start_test)
 
-        print performCV(X_train, y_train, folds, method, parameters, savemodel)
         print ''
+        accuracy = performCV(X_train, y_train, folds, method, parameters, savemodel)
+        finalGrid[accuracy] = maxdelta
 
-def performParameterSelection(stock_name, bestdelta, cut, start_test, savemodel, method, folds, parameters, grid):
+    final = sorted(finalGrid.iteritems(), key=operator.itemgetter(0), reverse=True)
+    print ''
+    print finalGrid
+    print ''
+    print 'Final CV Results: ', final
+    return final[0]
+
+
+def performParameterSelection(stock_name, bestdelta, start, end, start_test, savemodel, method, folds, grid):
     """
     """
-    dataset = get_data(stock_name, cut)
+    dataset = get_data(stock_name, start, end)
     delta = range(2, bestdelta + 1)
     print 'Delta days accounted: ', max(delta)
     dataset = applyRollMeanDelayedReturns(dataset, delta)
@@ -124,8 +132,10 @@ def addFeatures(dataframe, close, returns, n):
     - given Close_* computes its moving average on n days
 
     """
+    for c in dataframe.columns[0:5]:
+        dataframe[c + str(n)] = dataframe[c].shift(n)
 
-    return_n = "Time" + str(n)
+    return_n = "Return" + str(n)
     dataframe[return_n] = dataframe[close].pct_change(n)
 
     roll_n = "RolMean" + str(n)
@@ -143,23 +153,28 @@ def applyRollMeanDelayedReturns(dataset, delta):
 
     return dataset.drop(dataset.index[0:max(delta)]) #drop NaN due to delta spanning
 
-def get_data(name, cut):
-    data = web.get_data_yahoo(name, cut)
+def get_data(name, start, end):
+    data = web.get_data_yahoo(name, start, end)
     del data['Adj Close'] # we don't need Adj Close
     data['Return'] = (data['Close'] - data['Open']) / data['Open']
+
     return data
 
 def main():
 
-    maxdeltas = 10
+    maxdeltas = 9 # min is 3
     folds = 10
 
-    cut = datetime.datetime(1993,1,1)
-    start_test = datetime.datetime(2014,4,1)
-    parameters = [1e3, 0.01]
+    start = datetime.datetime(2014,1,1)
+    end = datetime.datetime(2015,12,31)
+    start_test = datetime.datetime(2015,1,1)
+    grid = {'c': [2**x for x in range(-5, 2)], 'g': [2**x for x in range(-15,1)]}
 
-    performFeatureSelection('SPY', maxdeltas, cut, start_test, False, 'SVM', folds,  parameters)
-    #performParameterSelection('SPY', maxdeltas, cut, start_test, False, 'SVM', folds,  parameters, )
+    # UNCOMMENT to do Feature selection
+    # parameters = [2, 1]
+    # performFeatureSelection('SPY', maxdeltas, start, end, start_test, False, 'SVM', folds,  parameters)
+
+    performParameterSelection('SPY', maxdeltas, start, end, start_test, False, 'SVM', folds, grid)
 
 if __name__ == '__main__':
     main()
