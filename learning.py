@@ -154,8 +154,8 @@ def applyRollMeanDelayedReturns(dataset, delta):
 
     dataset = dataset.drop(dataset.index[0:max(delta)]) #drop NaN due to delta spanning
 
-    # scaling colums
-    scaler = preprocessing.MinMaxScaler()
+    # normalize columns
+    scaler = preprocessing.MinMaxScaler((-1,1))
     return pd.DataFrame(scaler.fit_transform(dataset),\
             columns=dataset.columns, index=dataset.index)
 
@@ -169,19 +169,22 @@ def get_data(name, start, end):
 
 def main():
 
-    maxdeltas = 9 # min is 3
+    stock_name = 'SPY'
+    method = 'SVM'
+
+    maxdeltas = 4 # min is 3
     folds = 10
 
-    start = datetime.datetime(2014,1,1)
+    start = datetime.datetime(2010,1,1)
     end = datetime.datetime(2015,12,31)
     start_test = datetime.datetime(2015,1,1)
-    grid = {'c': [2**x for x in range(-5, 2)], 'g': [2**x for x in range(-15,1)]}
 
     # UNCOMMENT to do Feature selection
-    # parameters = [2, 1]
-    # performFeatureSelection('SPY', maxdeltas, start, end, start_test, False, 'SVM', folds,  parameters)
+    # parameters = [16, 0.125]
+    # performFeatureSelection(stock_name, maxdeltas, start, end, start_test, False, method, folds,  parameters)
 
-    performParameterSelection('SPY', maxdeltas, start, end, start_test, False, 'SVM', folds, grid)
+    grid = {'c': [2**x for x in range(10, -2, -1)], 'g': [2**x for x in range(-15,1, 2)]}
+    performParameterSelection(stock_name, maxdeltas, start, end, start_test, False, method, folds, grid)
 
 if __name__ == '__main__':
     main()

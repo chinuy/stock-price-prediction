@@ -7,25 +7,44 @@ from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.svm import SVC
 
-def buildModel(dataset, method, parameters):
-    """
-    Build model for predicting real testing data
-    """
+def preprocessData(dataset):
 
     le = preprocessing.LabelEncoder()
 
     # add prediction target: next day Up/Down
-    dataset['UpDown'] = (dataset['Close'] - dataset['Open'])
-    dataset.UpDown[dataset.UpDown >= 0] = 'Up'
-    dataset.UpDown[dataset.UpDown < 0] = 'Down'
+    threshold = 0.001
+    dataset['UpDown'] = (dataset['Close'] - dataset['Open']) / dataset['Open']
+    dataset.UpDown[dataset.UpDown >= threshold] = 'Up'
+    dataset.UpDown[dataset.UpDown < threshold] = 'Down'
     dataset.UpDown = le.fit(dataset.UpDown).transform(dataset.UpDown)
     dataset.UpDown = dataset.UpDown.shift(-1) # shift 1, so the y is actually next day's up/down
     dataset = dataset.drop(dataset.index[-1]) # drop last one because it has no up/down value
+    return dataset
 
+def buildModel(dataset, method, parameters):
+    """
+    Build final model for predicting real testing data
+    """
+    dataset = preprocessData(dataset)
     features = dataset.columns[0:-1]
+
     c = parameters[0]
     g =  parameters[1]
-    clf = SVC(C=c, gamma=g)
+    if method == 'RF':
+        clf = RandomForestClassifier(n_estimators=1000, n_jobs=-1)
+
+    elif method == 'KNN':
+        clf = neighbors.KNeighborsClassifier()
+
+    elif method == 'SVM':
+        clf = SVC(C=c, gamma=g)
+
+    elif method == 'ADA':
+        clf = AdaBoostClassifier()
+
+    elif method == 'GTB':
+        clf = GradientBoostingClassifier(n_estimators=100)
+
     return clf.fit(dataset[features], dataset['UpDown'])
 
 def prepareDataForClassification(dataset, start_test):
@@ -33,17 +52,9 @@ def prepareDataForClassification(dataset, start_test):
     generates categorical output column, attach to dataframe
     label the categories and split into train and test
     """
-    le = preprocessing.LabelEncoder()
-
-    # add prediction target: next day Up/Down
-    dataset['UpDown'] = (dataset['Close'] - dataset['Open'])
-    dataset.UpDown[dataset.UpDown >= 0] = 'Up'
-    dataset.UpDown[dataset.UpDown < 0] = 'Down'
-    dataset.UpDown = le.fit(dataset.UpDown).transform(dataset.UpDown)
-    dataset.UpDown = dataset.UpDown.shift(-1) # shift 1, so the y is actually next day's up/down
-    dataset = dataset.drop(dataset.index[-1]) # drop last one because it has no up/down value
-
+    dataset = preprocessData(dataset)
     features = dataset.columns[0:-1]
+
     X = dataset[features]
     y = dataset.UpDown
 
