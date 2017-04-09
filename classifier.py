@@ -57,11 +57,6 @@ def performClassification(X_train, y_train, X_test, y_test, method, parameters, 
     """
     performs classification on returns using serveral algorithms
     """
-
-    print 'Performing ' + method + ' Classification...'
-    print 'Size of train set: ', X_train.shape
-    print 'Size of test set: ', X_test.shape
-
     if method == 'RF':
         return performRFClass(X_train, y_train, X_test, y_test, parameters, savemodel)
 
@@ -78,7 +73,7 @@ def performClassification(X_train, y_train, X_test, y_test, method, parameters, 
         X_test = numpy.reshape(numpy.array(X_test), (X_test.shape[0], 1, X_test.shape[1]))
 
         model = performRNNlass(X_train, y_train, X_test, y_test, parameters, savemodel)
-        return model.evaluate(X_test, y_test)
+        return model.evaluate(X_test, y_test)[1]
 
 ####### Classifier Arsenal ####################################################
 
@@ -152,9 +147,10 @@ def performRNNlass(X_train, y_train, X_test, y_test, parameters, savemodel):
 
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-    return model.fit(
+    model.fit(
         X_train,
         y_train,
         batch_size=64,
         epochs=64,
         validation_split=0.1)
+    return model

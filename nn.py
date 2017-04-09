@@ -3,7 +3,7 @@ from keras.layers.recurrent import LSTM
 from keras.models import Sequential
 import numpy
 import time
-import learning
+import util
 import classifier
 import datetime
 
@@ -15,9 +15,9 @@ def main():
     end = datetime.datetime(2015,12,31)
     start_test = datetime.datetime(2015,1,1)
 
-    dataset = learning.get_data(stock_name, start, end)
+    dataset = util.get_data(stock_name, start, end)
     delta = range(1, delta)
-    dataset = learning.applyFeatures(dataset, delta)
+    dataset = util.applyFeatures(dataset, delta)
     X_train, y_train, X_test, y_test  = \
         classifier.prepareDataForClassification(dataset, start_test)
 

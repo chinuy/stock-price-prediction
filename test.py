@@ -1,18 +1,29 @@
-import learning
+import util
 import classifier
 import datetime
 from sklearn import preprocessing
 
 stocks = ['XLE', 'XLU', 'XLK', 'XLB', 'XLP', 'XLY', 'XLI', 'XLV', 'SPY']
+
+class Profolio:
+
+    def __init__(self, name):
+        self.name = name
+
+# baseline1
+stock_name = 'SPY'
+data = util.get_data(stock_name, '2016/1/1', '2016/12/31')
+
 stock_name = stocks[-1]
 method = 'SVM'
 delta = 4
 
 parameters = [64, 0.3125]
 
-data = learning.get_data(stock_name, '2010/1/1', '2016/12/31')
+data = util.get_data(stock_name, '2010/1/1', '2016/12/31')
 
 # keep a copy for unscaled data for later gain calculation
+# TODO replace by MinMax_Scaler.inverse_transform()
 #
 # the first day of test is 2015/12/30. Using this data on this day to predict
 # Up/Down of 2016/01/04
@@ -24,10 +35,10 @@ threshold = 0.001
 test.UpDown[test.UpDown >= threshold] = 'Up'
 test.UpDown[test.UpDown < threshold] = 'Down'
 test.UpDown = le.fit(test.UpDown).transform(test.UpDown)
-#test.UpDown = test.UpDown.shift(-1) # shift 1, so the y is actually next day's up/down
+test.UpDown = test.UpDown.shift(-1) # shift 1, so the y is actually next day's up/down
 
-dataMod = learning.applyFeatures(data, range(1, delta))
-dataMod = learning.preprocessData(dataMod)
+dataMod = util.applyFeatures(data, range(1, delta))
+dataMod = util.preprocessData(dataMod)
 
 tr = dataMod[dataMod.index <= datetime.datetime(2015,12,31)]
 te = dataMod[dataMod.index > datetime.datetime(2015,12,30)]

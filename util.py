@@ -2,7 +2,6 @@
 from sklearn import preprocessing
 import pandas_datareader.data as web
 import pandas as pd
-import datetime
 import classifier
 import numpy as np
 import operator
@@ -109,7 +108,7 @@ def performFeatureSelection(stock_name, maxdeltas, start, end, start_test, savem
     print ''
     print '============================================================='
     print ''
-    for maxdelta in range(3, maxdeltas + 2):
+    for maxdelta in range(3, maxdeltas, 2):
         dataset = get_data(stock_name, start, end)
         delta = range(1, maxdelta)
         print 'Delta days accounted: ', max(delta)
@@ -147,7 +146,7 @@ def performParameterSelection(stock_name, bestdelta, start, end, start_test, sav
 def addFeatures(dataframe, close, returns, n):
     """
     operates on two columns of dataframe:
-    - n >= 2
+    - append previous n days' OHLC and Volumn information
     - given Return_* computes the return of day i respect to day i-n.
     - given Close_* computes its moving average on n days
 
@@ -185,25 +184,3 @@ def get_data(name, start, end):
     data['Return'] = (data['Close'] - data['Open']) / data['Open']
 
     return data
-
-def main():
-
-    stock_name = 'SPY'
-    method = 'SVM'
-
-    maxdeltas = 4 # min is 3
-    folds = 10
-
-    start = datetime.datetime(2010,1,1)
-    end = datetime.datetime(2015,12,31)
-    start_test = datetime.datetime(2015,1,1)
-
-    # UNCOMMENT to do Feature selection
-    # parameters = [16, 0.125]
-    # performFeatureSelection(stock_name, maxdeltas, start, end, start_test, False, method, folds,  parameters)
-
-    grid = {'c': [2**x for x in range(10, -2, -1)], 'g': [2**x for x in range(-15,1, 2)]}
-    performParameterSelection(stock_name, maxdeltas, start, end, start_test, False, method, folds, grid)
-
-if __name__ == '__main__':
-    main()
