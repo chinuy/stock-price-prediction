@@ -17,7 +17,7 @@ def main():
 
     dataset = learning.get_data(stock_name, start, end)
     delta = range(1, delta)
-    dataset = learning.applyRollMeanDelayedReturns(dataset, delta)
+    dataset = learning.applyFeatures(dataset, delta)
     X_train, y_train, X_test, y_test  = \
         classifier.prepareDataForClassification(dataset, start_test)
 

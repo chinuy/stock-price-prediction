@@ -8,8 +8,6 @@ stock_name = stocks[-1]
 method = 'SVM'
 delta = 4
 
-#parameters = [16, 0.125]
-parameters = [0.5,0.5]
 parameters = [64, 0.3125]
 
 data = learning.get_data(stock_name, '2010/1/1', '2016/12/31')
@@ -28,12 +26,13 @@ test.UpDown[test.UpDown < threshold] = 'Down'
 test.UpDown = le.fit(test.UpDown).transform(test.UpDown)
 #test.UpDown = test.UpDown.shift(-1) # shift 1, so the y is actually next day's up/down
 
-dataMod = learning.applyRollMeanDelayedReturns(data, range(2, delta))
+dataMod = learning.applyFeatures(data, range(1, delta))
+dataMod = learning.preprocessData(dataMod)
 
 tr = dataMod[dataMod.index <= datetime.datetime(2015,12,31)]
 te = dataMod[dataMod.index > datetime.datetime(2015,12,30)]
 clf = classifier.buildModel(tr, method, parameters)
-pred = clf.predict(te)
+pred = clf.predict(te[te.columns[0:-1]])
 
 profit = 0
 for i in range(pred.size-1):

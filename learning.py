@@ -9,6 +9,23 @@ import operator
 
 pd.options.mode.chained_assignment = None
 
+def preprocessData(dataset):
+
+    le = preprocessing.LabelEncoder()
+
+    # in case divid-by-zero
+    dataset.Open[dataset.Open == 0] = 1
+
+    # add prediction target: next day Up/Down
+    threshold = 0.000
+    dataset['UpDown'] = (dataset['Close'] - dataset['Open']) / dataset['Open']
+    dataset.UpDown[dataset.UpDown >= threshold] = 'Up'
+    dataset.UpDown[dataset.UpDown < threshold] = 'Down'
+    dataset.UpDown = le.fit(dataset.UpDown).transform(dataset.UpDown)
+    dataset.UpDown = dataset.UpDown.shift(-1) # shift 1, so the y is actually next day's up/down
+    dataset = dataset.drop(dataset.index[-1]) # drop last one because it has no up/down value
+    return dataset
+
 def count_missing(dataframe):
     return (dataframe.shape[0] * dataframe.shape[1]) - dataframe.count().sum()
 
@@ -94,9 +111,10 @@ def performFeatureSelection(stock_name, maxdeltas, start, end, start_test, savem
     print ''
     for maxdelta in range(3, maxdeltas + 2):
         dataset = get_data(stock_name, start, end)
-        delta = range(2, maxdelta)
+        delta = range(1, maxdelta)
         print 'Delta days accounted: ', max(delta)
-        dataset = applyRollMeanDelayedReturns(dataset, delta)
+        dataset = applyFeatures(dataset, delta)
+        dataset = preprocessData(dataset)
         print 'Number of NaN: ', count_missing(dataset)
         X_train, y_train, X_test, y_test  = \
             classifier.prepareDataForClassification(dataset, start_test)
@@ -117,9 +135,10 @@ def performParameterSelection(stock_name, bestdelta, start, end, start_test, sav
     """
     """
     dataset = get_data(stock_name, start, end)
-    delta = range(2, bestdelta + 1)
+    delta = range(1, bestdelta + 1)
     print 'Delta days accounted: ', max(delta)
-    dataset = applyRollMeanDelayedReturns(dataset, delta)
+    dataset = applyFeatures(dataset, delta)
+    dataset = preprocessData(dataset)
     X_train, y_train, X_test, y_test  = \
             classifier.prepareDataForClassification(dataset, start_test)
 
@@ -142,7 +161,7 @@ def addFeatures(dataframe, close, returns, n):
     roll_n = "RolMean" + str(n)
     dataframe[roll_n] = dataframe[returns].rolling(n).mean()
 
-def applyRollMeanDelayedReturns(dataset, delta):
+def applyFeatures(dataset, delta):
     """
     applies rolling mean and delayed returns to each dataframe in the list
     """
@@ -155,7 +174,7 @@ def applyRollMeanDelayedReturns(dataset, delta):
     dataset = dataset.drop(dataset.index[0:max(delta)]) #drop NaN due to delta spanning
 
     # normalize columns
-    scaler = preprocessing.MinMaxScaler((-1,1))
+    scaler = preprocessing.MinMaxScaler()
     return pd.DataFrame(scaler.fit_transform(dataset),\
             columns=dataset.columns, index=dataset.index)
 
