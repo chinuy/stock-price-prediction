@@ -17,7 +17,11 @@ def buildModel(dataset, method, parameters):
 
     c = parameters[0]
     g =  parameters[1]
-    if method == 'RF':
+    if method == 'RNN':
+        clf = performRNNlass(dataset[features], dataset['UpDown'])
+        return clf
+
+    elif method == 'RF':
         clf = RandomForestClassifier(n_estimators=1000, n_jobs=-1)
 
     elif method == 'KNN':
@@ -28,9 +32,6 @@ def buildModel(dataset, method, parameters):
 
     elif method == 'ADA':
         clf = AdaBoostClassifier()
-
-    elif method == 'RNN':
-        clf = performRNNlass()
 
     return clf.fit(dataset[features], dataset['UpDown'])
 
@@ -72,7 +73,7 @@ def performClassification(X_train, y_train, X_test, y_test, method, parameters, 
     elif method == 'RNN':
         X_test = numpy.reshape(numpy.array(X_test), (X_test.shape[0], 1, X_test.shape[1]))
 
-        model = performRNNlass(X_train, y_train, X_test, y_test, parameters, savemodel)
+        model = performRNNlass(X_train, y_train)
         return model.evaluate(X_test, y_test)[1]
 
 ####### Classifier Arsenal ####################################################
@@ -125,10 +126,9 @@ def performAdaBoostClass(X_train, y_train, X_test, y_test, parameters, savemodel
 
     return accuracy
 
-def performRNNlass(X_train, y_train, X_test, y_test, parameters, savemodel):
+def performRNNlass(X_train, y_train):
     X_train = numpy.reshape(numpy.array(X_train), (X_train.shape[0], 1, X_train.shape[1]))
     model = Sequential()
-    print X_train.shape
 
     model.add(LSTM(
         128,
@@ -143,7 +143,7 @@ def performRNNlass(X_train, y_train, X_test, y_test, parameters, savemodel):
 
     model.add(Dense(
         units=1))
-    model.add(Activation('softmax'))
+    model.add(Activation('sigmoid'))
 
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 

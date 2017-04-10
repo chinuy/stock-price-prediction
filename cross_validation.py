@@ -4,9 +4,9 @@ import datetime
 def main():
 
     stock_name = 'SPY'
-    method = 'RNN'
+    method = 'SVM'
 
-    maxdeltas = 100 # min is 3
+    maxdeltas = 10 # min is 3
     folds = 10
 
     start = datetime.datetime(2010,1,1)
@@ -14,11 +14,11 @@ def main():
     start_test = datetime.datetime(2015,1,1)
 
     # UNCOMMENT to do Feature selection
-    parameters = [16, 0.125]
-    util.performFeatureSelection(stock_name, maxdeltas, start, end, start_test, False, method, folds,  parameters)
+    # parameters = [16, 0.125]
+    # util.performFeatureSelection(stock_name, maxdeltas, start, end, start_test, False, method, folds,  parameters)
 
-    # grid = {'c': [2**x for x in range(10, -2, -1)], 'g': [2**x for x in range(-15,1, 2)]}
-    # util.performParameterSelection(stock_name, maxdeltas, start, end, start_test, False, method, folds, grid)
+    grid = {'c': [2**x for x in range(10, -2, -1)], 'g': [2**x for x in range(-15,1, 2)]}
+    util.performParameterSelection(stock_name, maxdeltas, start, end, start_test, False, method, folds, grid)
 
 if __name__ == '__main__':
     main()

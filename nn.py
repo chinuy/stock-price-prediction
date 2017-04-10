@@ -10,7 +10,7 @@ import datetime
 def main():
 
     stock_name = 'SPY'
-    delta = 100
+    delta = 4
     start = datetime.datetime(2010,1,1)
     end = datetime.datetime(2015,12,31)
     start_test = datetime.datetime(2015,1,1)
@@ -18,6 +18,7 @@ def main():
     dataset = util.get_data(stock_name, start, end)
     delta = range(1, delta)
     dataset = util.applyFeatures(dataset, delta)
+    dataset = util.preprocessData(dataset)
     X_train, y_train, X_test, y_test  = \
         classifier.prepareDataForClassification(dataset, start_test)
 
@@ -25,10 +26,8 @@ def main():
 
     X_test = numpy.reshape(numpy.array(X_test), (X_test.shape[0], 1, X_test.shape[1]))
 
-
     #Step 2 Build Model
     model = Sequential()
-    print X_train.shape
 
     model.add(LSTM(
         128,
@@ -37,13 +36,13 @@ def main():
     model.add(Dropout(0.2))
 
     model.add(LSTM(
-        100,
+        240,
         return_sequences=False))
     model.add(Dropout(0.2))
 
     model.add(Dense(
         units=1))
-    model.add(Activation('softmax'))
+    model.add(Activation('sigmoid'))
 
     start = time.time()
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
@@ -52,11 +51,12 @@ def main():
     model.fit(
         X_train,
         y_train,
-        batch_size=64,
-        epochs=64,
+        batch_size=4,
+        epochs=4,
         validation_split=0.1)
 
-    print model.evaluate(X_test, y_test)
+    print model.predict(X_train)
+    print model.evaluate(X_train, y_train)
 
 if  __name__ == '__main__':
     main()
