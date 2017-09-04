@@ -148,7 +148,7 @@ def addFeatures(dataframe, close, returns, n):
     operates on two columns of dataframe:
     - append previous n days' OHLC and Volumn information
     - given Return_* computes the return of day i respect to day i-n.
-    - given Close_* computes its moving average on n days
+    - given RolMean_* computes its moving average on n days
 
     """
     for c in dataframe.columns[0:5]:

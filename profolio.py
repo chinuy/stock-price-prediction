@@ -21,20 +21,20 @@ class Profolio:
         return numpy.sqrt(n) * self.profits.mean() / self.profits.std()
 
 def smart_trade(etf, method, delta):
-    parameters = [0.5, 0.5]
+    parameters = [8, 0.0125]
 
-    data = util.get_data(etf, '2010/1/1', '2016/12/31')
+    data = util.get_data(etf, '2014/1/1', '2016/12/31')
 
     # keep a copy for unscaled data for later gain calculation
     # TODO replace by MinMax_Scaler.inverse_transform()
     #
-    # the first day of test is 2015/12/30. Using this data on this day to predict
+    # the first day of test is 2015/12/31. Using this data on this day to predict
     # Up/Down of 2016/01/04
     test = data[data.index > datetime.datetime(2015,12,30)]
 
     le = preprocessing.LabelEncoder()
     test['UpDown'] = (test['Close'] - test['Open']) / test['Open']
-    threshold = 0.001
+    threshold = 0.000
     test.UpDown[test.UpDown >= threshold] = 'Up'
     test.UpDown[test.UpDown < threshold] = 'Down'
     test.UpDown = le.fit(test.UpDown).transform(test.UpDown)
@@ -43,7 +43,8 @@ def smart_trade(etf, method, delta):
     dataMod = util.applyFeatures(data, range(1, delta))
     dataMod = util.preprocessData(dataMod)
 
-    tr = dataMod[dataMod.index <= datetime.datetime(2015,12,31)]
+    tr = dataMod[dataMod.index <= datetime.datetime(2015,12,30)]
+    #tr = dataMod[dataMod.index <= datetime.datetime(2016,06,30)]
     te = dataMod[dataMod.index > datetime.datetime(2015,12,30)]
     te = te[te.columns[0:-1]] # remove Up/Down label from testing
     clf = classifier.buildModel(tr, method, parameters)
@@ -91,12 +92,12 @@ def main():
 
     legend = []
 
-    p0 = Profolio('All short-only')
-    for etf in ETFs:
-        data = util.get_data(etf, '2016/1/1', '2016/12/31')
-        p0.profits -= data.Return
-    label, = plt.plot(range(1, 253), p0.accProfits(), 'y--', label=p0.name)
-    legend.append(label)
+    # p0 = Profolio('All short-only')
+    # for etf in ETFs:
+    #     data = util.get_data(etf, '2016/1/1', '2016/12/31')
+    #     p0.profits -= data.Return
+    # label, = plt.plot(range(1, 253), p0.accProfits(), 'y--', label=p0.name)
+    # legend.append(label)
 
     # baseline1 SPY long-only
     p1 = Profolio('SPY long-only')
@@ -117,7 +118,7 @@ def main():
     my = Profolio('My strategy')
     my.profits = numpy.zeros(252)
     for etf in ETFs:
-        my.profits += smart_trade(etf, 'RNN', 40)
+        my.profits += smart_trade(etf, 'SVM', 4)
     label, = plt.plot(range(1, 253), my.accProfits(), 'r--', label=my.name)
     legend.append(label)
 
@@ -127,4 +128,5 @@ def main():
     print p1.annualSharpeRatio(), p2.annualSharpeRatio(), my.annualSharpeRatio()
 
 if __name__ == '__main__':
-    compareMethods()
+    main()
+    #compareMethods()

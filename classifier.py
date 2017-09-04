@@ -15,8 +15,6 @@ def buildModel(dataset, method, parameters):
     """
     features = dataset.columns[0:-1]
 
-    c = parameters[0]
-    g =  parameters[1]
     if method == 'RNN':
         clf = performRNNlass(dataset[features], dataset['UpDown'])
         return clf
@@ -28,6 +26,8 @@ def buildModel(dataset, method, parameters):
         clf = neighbors.KNeighborsClassifier()
 
     elif method == 'SVM':
+        c = parameters[0]
+        g =  parameters[1]
         clf = SVC(C=c, gamma=g)
 
     elif method == 'ADA':
@@ -93,7 +93,7 @@ def performKNNClass(X_train, y_train, X_test, y_test, parameters, savemodel):
     """
     KNN binary Classification
     """
-    clf = neighbors.KNeighborsClassifier()
+    clf = neighbors.KNeighborsClassifier(parameters[0])
     clf.fit(X_train, y_train)
 
     accuracy = clf.score(X_test, y_test)
